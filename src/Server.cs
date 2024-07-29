@@ -11,12 +11,27 @@ server.Start();
 var socket = server.AcceptSocket(); // wait for client
 var buffer = new byte[1024];
 int receivedData = socket.Receive(buffer); // read request
-var receivedText = ASCIIEncoding.ASCII.GetString(buffer); // read request
+var receivedText = ASCIIEncoding.ASCII.GetString(buffer, 0, receivedData); // read request
 
-var linesSplitted = receivedText.Split("\r\n");
-var (method,path,httpVer) = (linesSplitted[0] , linesSplitted[1], linesSplitted[2]);
-if(path == "/" || path==""){
-    socket.Send(Encoding.UTF8.GetBytes("HTTP/1.1 200 OK\r\n\r\n"));
-}else{
-    socket.Send(Encoding.UTF8.GetBytes("HTTP/1.1 404 Not Found\r\n\r\n"));
+// Split the received text into lines
+var linesSplitted = receivedText.Split(new string[] { "\r\n" }, StringSplitOptions.None);
+
+// The first line is the request line: method, path, and HTTP version
+var requestLine = linesSplitted[0].Split(' ');
+var method = requestLine[0];
+var path = requestLine[1];
+var httpVer = requestLine[2];
+
+// Determine the response based on the requested path
+if (path == "/") {
+    // Send a 200 OK response
+    var response = "HTTP/1.1 200 OK\r\n\r\n";
+    socket.Send(Encoding.UTF8.GetBytes(response));
+} else {
+    // Send a 404 Not Found response
+    var response = "HTTP/1.1 404 Not Found\r\n\r\n";
+    socket.Send(Encoding.UTF8.GetBytes(response));
 }
+
+socket.Close();
+server.Stop();
