@@ -27,7 +27,24 @@ async Task HandleClient(Socket clientSocket)
     var httpVer = requestLine[2];
 
     // Determine the response based on the requested path
-    if (path.StartsWith("/echo/"))
+    if (path.StartsWith("/files/"))
+    {
+        var argv = Environment.GetCommandLineArgs();
+        var currentDirectory = argv[2];
+        var fileName = path.Substring(7);
+        var filePath = currentDirectory + fileName;
+        if (File.Exists(filePath)) {
+            var fileContent = File.ReadAllText(filePath);
+            // Construct the response
+            var responseBody = fileContent;
+            var response = $"HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: {responseBody.Length}\r\n\r\n{responseBody}";
+            await clientSocket.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(response)), SocketFlags.None);
+        }else{
+            var response = "HTTP/1.1 404 Not Found\r\n\r\n";
+            await clientSocket.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(response)), SocketFlags.None);
+        }
+    }
+    else if (path.StartsWith("/echo/"))
     {
         // Extract the string from the path
         var echoStr = path.Substring(6);
