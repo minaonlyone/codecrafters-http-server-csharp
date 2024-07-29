@@ -61,16 +61,16 @@ async Task HandleClient(Socket clientSocket)
         // Construct the response
         var responseBody = echoStr;
 
-        string encoding = "";
+        List<string> encoding= new List<string>{};
         foreach (var line in linesSplitted)
         {
             if (line.StartsWith("Accept-Encoding:"))
             {
-                encoding = line.Substring(16).Trim();
+                encoding = line.Substring(16).Trim().Split(',').ToList();
                 break;
             }
         }
-        if(encoding == "gzip"){
+        if(encoding.Contains("gzip")){
             var response = $"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Encoding: gzip\r\nContent-Length: {responseBody.Length}\r\n\r\n{responseBody}";
             await clientSocket.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(response)), SocketFlags.None);
         }else{
