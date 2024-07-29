@@ -1,3 +1,4 @@
+using System.IO.Compression;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -71,8 +72,20 @@ async Task HandleClient(Socket clientSocket)
             }
         }
         if(encoding.Contains("gzip")){
-            var response = $"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Encoding: gzip\r\nContent-Length: {responseBody.Length}\r\n\r\n{responseBody}";
+            byte[] compressedResponse;
+            using (var outputStream = new MemoryStream())
+            {
+                using (var gzipStream = new GZipStream(outputStream, CompressionMode.Compress))
+                {
+                    var responseBytes = Encoding.UTF8.GetBytes(responseBody);
+                    gzipStream.Write(responseBytes, 0, responseBytes.Length);
+                }
+                compressedResponse = outputStream.ToArray();
+            }
+
+            var response = $"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Encoding: gzip\r\nContent-Length: {compressedResponse.Length}\r\n\r\n";
             await clientSocket.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(response)), SocketFlags.None);
+            await clientSocket.SendAsync(new ArraySegment<byte>(compressedResponse), SocketFlags.None);
         }else{
             var response = $"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {responseBody.Length}\r\n\r\n{responseBody}";
             await clientSocket.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(response)), SocketFlags.None);
