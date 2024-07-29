@@ -60,8 +60,23 @@ async Task HandleClient(Socket clientSocket)
         var echoStr = path.Substring(6);
         // Construct the response
         var responseBody = echoStr;
-        var response = $"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {responseBody.Length}\r\n\r\n{responseBody}";
-        await clientSocket.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(response)), SocketFlags.None);
+
+        string encoding = "";
+        foreach (var line in linesSplitted)
+        {
+            if (line.StartsWith("Accept-Encoding:"))
+            {
+                encoding = line.Substring(16).Trim();
+                break;
+            }
+        }
+        if(encoding == "gzip"){
+            var response = $"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Encoding: gzip\r\nContent-Length: {responseBody.Length}\r\n\r\n{responseBody}";
+            await clientSocket.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(response)), SocketFlags.None);
+        }else{
+            var response = $"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {responseBody.Length}\r\n\r\n{responseBody}";
+            await clientSocket.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(response)), SocketFlags.None);
+        }
     }
     else if (path == "/")
     {
