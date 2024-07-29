@@ -30,8 +30,12 @@ if (path.StartsWith("/echo/")) {
     var responseBody = echoStr;
     var response = $"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {responseBody.Length}\r\n\r\n{responseBody}";
     socket.Send(Encoding.UTF8.GetBytes(response));
+}else if (path == "/") {
+    // Send a 200 OK response
+    var response = "HTTP/1.1 200 OK\r\n\r\n";
+    socket.Send(Encoding.UTF8.GetBytes(response));
 } else {
-    // Send a 404 Not Found response for any other path
+    // Send a 404 Not Found response
     var response = "HTTP/1.1 404 Not Found\r\n\r\n";
     socket.Send(Encoding.UTF8.GetBytes(response));
 }
