@@ -36,7 +36,13 @@ if (path.StartsWith("/echo/")) {
     socket.Send(Encoding.UTF8.GetBytes(response));
 }else if (path == "/user-agent") {
     // Send a 200 OK response // getting user agent from request
-    var userAgent = linesSplitted[3].Split(' ')[1];
+    string userAgent = "";
+    foreach (var line in linesSplitted) {
+        if (line.StartsWith("User-Agent:")) {
+            userAgent = line.Substring(12).Trim();
+            break;
+        }
+    }
     var responseBody = userAgent;
     var response = $"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {responseBody.Length}\r\n\r\n{responseBody}";
     socket.Send(Encoding.UTF8.GetBytes(response));
