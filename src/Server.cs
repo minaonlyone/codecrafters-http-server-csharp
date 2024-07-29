@@ -27,7 +27,7 @@ async Task HandleClient(Socket clientSocket)
     var httpVer = requestLine[2];
 
     // Determine the response based on the requested path
-    if (path.StartsWith("/files/"))
+    if (path.StartsWith("/files/") && method == "GET")
     {
         var argv = Environment.GetCommandLineArgs();
         var currentDirectory = argv[2];
@@ -43,6 +43,16 @@ async Task HandleClient(Socket clientSocket)
             var response = "HTTP/1.1 404 Not Found\r\n\r\n";
             await clientSocket.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(response)), SocketFlags.None);
         }
+    }
+    else if (path.StartsWith("/files/") && method == "POST"){
+        var argv = Environment.GetCommandLineArgs();
+        var currentDirectory = argv[2];
+        var fileName = path.Substring(7);
+        var filePath = currentDirectory + fileName;
+        var fileContent = linesSplitted[linesSplitted.Length - 1];
+        File.WriteAllText(filePath, fileContent);
+        var response = "HTTP/1.1 201 Created\r\n\r\n";
+        await clientSocket.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(response)), SocketFlags.None);
     }
     else if (path.StartsWith("/echo/"))
     {
