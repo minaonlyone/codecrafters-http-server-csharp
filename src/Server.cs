@@ -15,7 +15,7 @@ var receivedText = ASCIIEncoding.ASCII.GetString(buffer); // read request
 
 var linesSplitted = receivedText.Split("\r\n");
 var (method,path,httpVer) = (linesSplitted[0] , linesSplitted[1], linesSplitted[2]);
-if(path == "/"){
+if(path == "/" || path==""){
     socket.Send(Encoding.UTF8.GetBytes("HTTP/1.1 200 OK\r\n\r\n"));
 }else{
     socket.Send(Encoding.UTF8.GetBytes("HTTP/1.1 404 Not Found\r\n\r\n"));
