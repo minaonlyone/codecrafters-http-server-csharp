@@ -9,4 +9,14 @@ Console.WriteLine("Logs from your program will appear here!");
 TcpListener server = new TcpListener(IPAddress.Any, 4221);
 server.Start();
 var socket = server.AcceptSocket(); // wait for client
-socket.Send(Encoding.UTF8.GetBytes("HTTP/1.1 200 OK\r\n\r\n"));
+var buffer = new byte[1024];
+int receivedData = socket.Receive(buffer); // read request
+var receivedText = ASCIIEncoding.ASCII.GetString(buffer); // read request
+
+var linesSplitted = receivedText.Split("\r\n");
+var (method,path,httpVer) = (linesSplitted[0] , linesSplitted[1], linesSplitted[2]);
+if(path == "/"){
+    socket.Send(Encoding.UTF8.GetBytes("HTTP/1.1 200 OK\r\n\r\n"));
+}else{
+    socket.Send(Encoding.UTF8.GetBytes("HTTP/1.1 404 Not Found\r\n\r\n"));
+}
