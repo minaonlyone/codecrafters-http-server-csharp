@@ -66,7 +66,7 @@ async Task HandleClient(Socket clientSocket)
         {
             if (line.StartsWith("Accept-Encoding:"))
             {
-                encoding = line.Substring(16).Trim().Split(',').ToList();
+                encoding = line.Substring(16).Trim().Split(',').Select(e => e.Trim()).ToList();
                 break;
             }
         }
