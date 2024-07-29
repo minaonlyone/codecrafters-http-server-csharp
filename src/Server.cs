@@ -6,14 +6,15 @@ using System.Threading.Tasks;
 // You can use print statements as follows for debugging, they'll be visible when running tests.
 Console.WriteLine("Logs from your program will appear here!");
 
-// Uncomment this block to pass the first stage
 TcpListener server = new TcpListener(IPAddress.Any, 4221);
 server.Start();
 
-async Task HandleClient(Socket socket)
+Console.WriteLine("Server started on port 4221");
+
+async Task HandleClient(Socket clientSocket)
 {
     var buffer = new byte[1024];
-    int receivedData = socket.Receive(buffer); // read request
+    int receivedData = await clientSocket.ReceiveAsync(new ArraySegment<byte>(buffer), SocketFlags.None); // read request
     var receivedText = ASCIIEncoding.ASCII.GetString(buffer, 0, receivedData); // read request
 
     // Split the received text into lines
@@ -26,37 +27,46 @@ async Task HandleClient(Socket socket)
     var httpVer = requestLine[2];
 
     // Determine the response based on the requested path
-    if (path.StartsWith("/echo/")) {
+    if (path.StartsWith("/echo/"))
+    {
         // Extract the string from the path
         var echoStr = path.Substring(6);
         // Construct the response
         var responseBody = echoStr;
         var response = $"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {responseBody.Length}\r\n\r\n{responseBody}";
-        socket.Send(Encoding.UTF8.GetBytes(response));
-    }else if (path == "/") {
+        await clientSocket.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(response)), SocketFlags.None);
+    }
+    else if (path == "/")
+    {
         // Send a 200 OK response
         var response = "HTTP/1.1 200 OK\r\n\r\n";
-        socket.Send(Encoding.UTF8.GetBytes(response));
-    }else if (path == "/user-agent") {
-        // Send a 200 OK response // getting user agent from request
+        await clientSocket.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(response)), SocketFlags.None);
+    }
+    else if (path == "/user-agent")
+    {
+        // Extract the User-Agent from the request headers
         string userAgent = "";
-        foreach (var line in linesSplitted) {
-            if (line.StartsWith("User-Agent:")) {
+        foreach (var line in linesSplitted)
+        {
+            if (line.StartsWith("User-Agent:"))
+            {
                 userAgent = line.Substring(12).Trim();
                 break;
             }
         }
+        // Construct the response
         var responseBody = userAgent;
         var response = $"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {responseBody.Length}\r\n\r\n{responseBody}";
-        socket.Send(Encoding.UTF8.GetBytes(response));
-    } else {
+        await clientSocket.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(response)), SocketFlags.None);
+    }
+    else
+    {
         // Send a 404 Not Found response
         var response = "HTTP/1.1 404 Not Found\r\n\r\n";
-        socket.Send(Encoding.UTF8.GetBytes(response));
+        await clientSocket.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(response)), SocketFlags.None);
     }
 
-    socket.Close();
-
+    clientSocket.Close();
 }
 
 async Task AcceptClientsAsync()
@@ -69,5 +79,3 @@ async Task AcceptClientsAsync()
 }
 
 await AcceptClientsAsync();
-
-
